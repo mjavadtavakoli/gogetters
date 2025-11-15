@@ -1,6 +1,7 @@
 package main
 
 import (
+    "gogetters/internal/laptop"
     "gogetters/internal/motorcycle"
     "gogetters/internal/book"
     "gogetters/internal/coffee"
@@ -14,7 +15,7 @@ func main() {
     db := database.Connect(dsn)
 
     // Migrate Models
-    db.AutoMigrate(&models.Book{}, &models.Coffee{}, &models.Motorcycle{})
+    db.AutoMigrate(&models.Book{}, &models.Coffee{}, &models.Motorcycle{}, &models.Laptop{})
 
     // ---- BOOK SETUP ----
     bookRepo := book.NewRepository(db)
@@ -31,6 +32,10 @@ func main() {
     motorcycleService := motorcycle.NewService(motorcycleRepo)
     motorcycleHandler := motorcycle.NewHandler(motorcycleService)
 
+    // ---- LAPTOP SETUP ----
+    laptopRepo :=  laptop.NewRepository(db)
+    laptopService :=  laptop.NewService( laptopRepo)
+    laptopHandler :=  laptop.NewHandler( laptopService)
 
     // ---- ROUTER ----
     r := gin.Default()
@@ -47,6 +52,9 @@ func main() {
     r.POST("/motorcycles", motorcycleHandler.Create)
     r.GET("/motorcycles", motorcycleHandler.List)
 
+    // Laptop Routes
+     r.POST("/laptops", laptopHandler.Create)
+    r.GET("/laptops", laptopHandler.List)
 
 
     r.Run(":8080")
