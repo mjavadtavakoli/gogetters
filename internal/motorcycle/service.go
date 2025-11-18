@@ -5,10 +5,10 @@ import (
 )
 
 type Service struct {
-	repo *Repository
+	repo RepositoryInterface
 }
 
-func NewService(repo *Repository) *Service {
+func NewService(repo RepositoryInterface) *Service {
 	return &Service{repo: repo}
 }
 
@@ -18,4 +18,8 @@ func (s *Service) CreateMotorcycle(motorcycle *models.Motorcycle) error {
 
 func (s *Service) GetAllMotorcycle() ([]models.Motorcycle, error) {
 	return s.repo.GetAllMotorcycle()
+}
+
+func (s *Service) UpdateMotorcycle(id uint, motorcycle *models.Motorcycle) error {
+	return s.repo.UpdateMotorcycle(id, motorcycle)
 }

@@ -51,6 +51,7 @@ func main() {
     // Motorcycle Routes
     r.POST("/motorcycles", motorcycleHandler.Create)
     r.GET("/motorcycles", motorcycleHandler.List)
+    r.PUT("/motorcycles/:id", motorcycleHandler.Update)
 
     // Laptop Routes
     r.POST("/laptops", laptopHandler.Create)

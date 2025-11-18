@@ -1,0 +1,238 @@
+package motorcycle
+
+import (
+	"bytes"
+	"encoding/json"
+	"gogetters/internal/models"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+func TestHandler_Create(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	tests := []struct {
+		name           string
+		requestBody    interface{}
+		mockSetup      func(*MockRepository)
+		expectedStatus int
+	}{
+		{
+			name: "successful creation",
+			requestBody: models.Motorcycle{
+				Brand:      "Yamaha",
+				Totalspeed: 180,
+				Fueltype:   "Gasoline",
+				Price:      15000.00,
+			},
+			mockSetup: func(mr *MockRepository) {
+				mr.On("CreateMotorcycle", mock.AnythingOfType("*models.Motorcycle")).Return(nil).Run(func(args mock.Arguments) {
+					m := args.Get(0).(*models.Motorcycle)
+					m.ID = 1
+				})
+			},
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:           "invalid JSON",
+			requestBody:    "invalid json",
+			mockSetup:      func(mr *MockRepository) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "service error",
+			requestBody: models.Motorcycle{
+				Brand:      "Yamaha",
+				Totalspeed: 180,
+				Fueltype:   "Gasoline",
+				Price:      15000.00,
+			},
+			mockSetup: func(mr *MockRepository) {
+				mr.On("CreateMotorcycle", mock.AnythingOfType("*models.Motorcycle")).Return(assert.AnError)
+			},
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(MockRepository)
+			tt.mockSetup(mockRepo)
+
+			service := NewService(mockRepo)
+			handler := NewHandler(service)
+
+			router := gin.New()
+			router.POST("/motorcycles", handler.Create)
+
+			body, _ := json.Marshal(tt.requestBody)
+			req, _ := http.NewRequest("POST", "/motorcycles", bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+			
+			if tt.expectedStatus == http.StatusCreated {
+				var response models.Motorcycle
+				json.Unmarshal(w.Body.Bytes(), &response)
+				assert.NotZero(t, response.ID)
+			}
+			
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestHandler_Create_Integration(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockRepo := new(MockRepository)
+	mockRepo.On("CreateMotorcycle", mock.AnythingOfType("*models.Motorcycle")).Return(nil).Run(func(args mock.Arguments) {
+		m := args.Get(0).(*models.Motorcycle)
+		m.ID = 1
+	})
+
+	service := NewService(mockRepo)
+	handler := NewHandler(service)
+
+	router := gin.New()
+	router.POST("/motorcycles", handler.Create)
+
+	motorcycle := models.Motorcycle{
+		Brand:      "Yamaha",
+		Totalspeed: 180,
+		Fueltype:   "Gasoline",
+		Price:      15000.00,
+	}
+
+	body, _ := json.Marshal(motorcycle)
+	req, _ := http.NewRequest("POST", "/motorcycles", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	
+	var response models.Motorcycle
+	json.Unmarshal(w.Body.Bytes(), &response)
+	assert.Equal(t, uint(1), response.ID)
+	assert.Equal(t, "Yamaha", response.Brand)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestHandler_List(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockRepo := new(MockRepository)
+	expectedMotorcycles := []models.Motorcycle{
+		{ID: 1, Brand: "Yamaha", Totalspeed: 180, Fueltype: "Gasoline", Price: 15000.00},
+		{ID: 2, Brand: "Honda", Totalspeed: 200, Fueltype: "Gasoline", Price: 18000.00},
+	}
+	mockRepo.On("GetAllMotorcycle").Return(expectedMotorcycles, nil)
+
+	service := NewService(mockRepo)
+	handler := NewHandler(service)
+
+	router := gin.New()
+	router.GET("/motorcycles", handler.List)
+
+	req, _ := http.NewRequest("GET", "/motorcycles", nil)
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	
+	var response []models.Motorcycle
+	json.Unmarshal(w.Body.Bytes(), &response)
+	assert.Len(t, response, 2)
+	assert.Equal(t, "Yamaha", response[0].Brand)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestHandler_Update(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	tests := []struct {
+		name           string
+		id             string
+		requestBody    interface{}
+		mockSetup      func(*MockRepository)
+		expectedStatus int
+	}{
+		{
+			name: "successful update",
+			id:   "1",
+			requestBody: models.Motorcycle{
+				Brand:      "Yamaha R1",
+				Totalspeed: 200,
+				Fueltype:   "Gasoline",
+				Price:      20000.00,
+			},
+			mockSetup: func(mr *MockRepository) {
+				mr.On("UpdateMotorcycle", uint(1), mock.AnythingOfType("*models.Motorcycle")).Return(nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "invalid id",
+			id:             "invalid",
+			requestBody:    models.Motorcycle{},
+			mockSetup:      func(mr *MockRepository) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "invalid JSON body",
+			id:             "1",
+			requestBody:    "not a valid json object",
+			mockSetup:      func(mr *MockRepository) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "service error",
+			id:   "1",
+			requestBody: models.Motorcycle{
+				Brand:      "Yamaha R1",
+				Totalspeed: 200,
+				Fueltype:   "Gasoline",
+				Price:      20000.00,
+			},
+			mockSetup: func(mr *MockRepository) {
+				mr.On("UpdateMotorcycle", uint(1), mock.AnythingOfType("*models.Motorcycle")).Return(assert.AnError)
+			},
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(MockRepository)
+			tt.mockSetup(mockRepo)
+
+			service := NewService(mockRepo)
+			handler := NewHandler(service)
+
+			router := gin.New()
+			router.PUT("/motorcycles/:id", handler.Update)
+
+			body, _ := json.Marshal(tt.requestBody)
+			req, _ := http.NewRequest("PUT", "/motorcycles/"+tt.id, bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+

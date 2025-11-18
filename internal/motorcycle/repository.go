@@ -5,6 +5,13 @@ import (
 	"gorm.io/gorm"
 )
 
+// RepositoryInterface defines the repository methods
+type RepositoryInterface interface {
+	CreateMotorcycle(motorcycle *models.Motorcycle) error
+	GetAllMotorcycle() ([]models.Motorcycle, error)
+	UpdateMotorcycle(id uint, motorcycle *models.Motorcycle) error
+}
+
 type Repository struct {
 	DB *gorm.DB
 }
@@ -21,4 +28,8 @@ func (r *Repository) GetAllMotorcycle() ([]models.Motorcycle, error) {
 	var motorcycles []models.Motorcycle
 	err := r.DB.Find(&motorcycles).Error
 	return motorcycles, err
+}
+
+func (r *Repository) UpdateMotorcycle(id uint, motorcycle *models.Motorcycle) error {
+	return r.DB.Model(&models.Motorcycle{}).Where("id = ?", id).Updates(motorcycle).Error
 }

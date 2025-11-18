@@ -3,6 +3,7 @@ package motorcycle
 import (
 	"gogetters/internal/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,4 +36,27 @@ func (h *Handler) List(c *gin.Context) {
 	motorcycles, _ := h.service.GetAllMotorcycle()
 
 	c.JSON(http.StatusOK, motorcycles)	
+}
+
+func (h *Handler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var motorcycle models.Motorcycle
+	
+	if err := c.ShouldBindJSON(&motorcycle); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	idUint, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if err := h.service.UpdateMotorcycle(uint(idUint), &motorcycle); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, motorcycle)
 }
