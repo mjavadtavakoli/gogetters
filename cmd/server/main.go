@@ -1,6 +1,8 @@
 package main
 
 import (
+    "context"
+    "flag"
     "gogetters/internal/laptop"
     "gogetters/internal/motorcycle"
     "gogetters/internal/book"
@@ -8,9 +10,34 @@ import (
     "gogetters/internal/database"
     "gogetters/internal/models"
     "github.com/gin-gonic/gin"
+    "log"
+    "net/http"
+    "os"
+    "os/signal"
+    "runtime/pprof"
+    "syscall"
+    "time"
 )
 
 func main() {
+    // CPU profiling flag
+    var cpuProfile = flag.String("cpuprofile", "", "write cpu profile to file")
+    flag.Parse()
+    
+    // Start CPU profiling if flag is set
+    var profileFile *os.File
+    if *cpuProfile != "" {
+        var err error
+        profileFile, err = os.Create(*cpuProfile)
+        if err != nil {
+            log.Fatalf("Failed to create CPU profile: %v", err)
+        }
+        if err := pprof.StartCPUProfile(profileFile); err != nil {
+            log.Fatalf("Failed to start CPU profile: %v", err)
+        }
+        log.Printf("CPU profiling enabled, writing to %s", *cpuProfile)
+    }
+    
     dsn := "host=localhost user=postgres password=7878 dbname=gogetters port=5432 sslmode=disable"
     db := database.Connect(dsn)
 
@@ -58,6 +85,38 @@ func main() {
     r.GET("/laptops", laptopHandler.List)
     r.PUT("/laptops/:id", laptopHandler.Update)
 
+    // Create HTTP server with graceful shutdown
+    srv := &http.Server{
+        Addr:    ":8080",
+        Handler: r,
+    }
 
-    r.Run(":8080")
+    // Graceful shutdown handling
+    go func() {
+        if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+            log.Fatalf("Failed to start server: %v", err)
+        }
+    }()
+
+    // Wait for interrupt signal to gracefully shutdown the server
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    <-quit
+    log.Println("Shutting down server...")
+
+    // Stop CPU profiling before shutdown
+    if profileFile != nil {
+        pprof.StopCPUProfile()
+        profileFile.Close()
+        log.Printf("CPU profile saved to %s", *cpuProfile)
+    }
+
+    // Graceful shutdown with timeout
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+    if err := srv.Shutdown(ctx); err != nil {
+        log.Fatal("Server forced to shutdown:", err)
+    }
+
+    log.Println("Server exited")
 } 
