@@ -53,8 +53,9 @@ func main() {
     r.GET("/motorcycles", motorcycleHandler.List)
 
     // Laptop Routes
-     r.POST("/laptops", laptopHandler.Create)
+    r.POST("/laptops", laptopHandler.Create)
     r.GET("/laptops", laptopHandler.List)
+    r.PUT("/laptops/:id", laptopHandler.Update)
 
 
     r.Run(":8080")

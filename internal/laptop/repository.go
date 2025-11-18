@@ -22,3 +22,7 @@ func (r *Repository) GetAllLaptop() ([]models.Laptop, error) {
 	err := r.DB.Find(&laptops).Error
 	return laptops, err
 }
+
+func (r *Repository) UpdateLaptop(id uint, laptop *models.Laptop) error {
+	return r.DB.Model(&models.Laptop{}).Where("id = ?", id).Updates(laptop).Error
+}

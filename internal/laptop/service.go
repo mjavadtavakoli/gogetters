@@ -19,3 +19,7 @@ func (s *Service) CreateLaptop(laptop *models.Laptop) error {
 func (s *Service) GetAllLaptop() ([]models.Laptop, error) {
 	return s.repo.GetAllLaptop()
 }
+
+func (s *Service) UpdateLaptop(id uint, laptop *models.Laptop) error {
+	return s.repo.UpdateLaptop(id, laptop)
+}
