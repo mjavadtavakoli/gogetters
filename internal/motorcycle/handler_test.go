@@ -268,3 +268,4 @@ func BenchmarkHandlerUpdate(b *testing.B) {
 		h.Update(c)
 	}
 }
+

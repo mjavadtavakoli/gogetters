@@ -3,7 +3,7 @@ package coffee
 import (
 	"gogetters/internal/models"
 	"net/http"
-
+	"strconv"
 	"github.com/gin-gonic/gin"
 )
 
@@ -37,4 +37,27 @@ func (h *Handler) List(c *gin.Context) {
         return
     }
     c.JSON(http.StatusOK, coffees)
+}
+
+func (h *Handler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var coffee models.Coffee
+	
+	if err := c.ShouldBindJSON(&coffee); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	idUint, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if err := h.service.UpdateCoffee(uint(idUint), &coffee); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, coffee)
 }

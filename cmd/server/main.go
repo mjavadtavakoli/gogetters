@@ -75,6 +75,7 @@ func main() {
     // Coffee Routes
     r.POST("/coffees", coffeeHandler.Create)
     r.GET("/coffees", coffeeHandler.List)
+    r.PUT("/coffees/:id",coffeeHandler.Update)
 
     // Motorcycle Routes
     r.POST("/motorcycles", motorcycleHandler.Create)

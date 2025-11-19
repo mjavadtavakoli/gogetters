@@ -19,3 +19,7 @@ func (s *Service) CreateCoffee(coffee *models.Coffee) error {
 func (s *Service) GetAllCoffee() ([]models.Coffee, error) {
 	return s.repo.GetAllCoffee()
 }
+
+func (s *Service) UpdateCoffee(id uint, coffee *models.Coffee) error {
+	return s.repo.UpdateCoffee(id, coffee)
+}

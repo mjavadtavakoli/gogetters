@@ -22,3 +22,7 @@ func (r *Repository) GetAllCoffee() ([]models.Coffee, error) {
 	err := r.DB.Find(&coffees).Error
 	return coffees, err
 }
+
+func (r *Repository) UpdateCoffee(id uint, coffee *models.Coffee) error {
+	return r.DB.Model(&models.Coffee{}).Where("id = ?", id).Updates(coffee).Error
+}
