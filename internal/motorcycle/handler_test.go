@@ -6,6 +6,7 @@ import (
 	"gogetters/internal/models"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -78,13 +79,13 @@ func TestHandler_Create(t *testing.T) {
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			if tt.expectedStatus == http.StatusCreated {
 				var response models.Motorcycle
 				json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NotZero(t, response.ID)
 			}
-			
+
 			mockRepo.AssertExpectations(t)
 		})
 	}
@@ -120,7 +121,7 @@ func TestHandler_Create_Integration(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-	
+
 	var response models.Motorcycle
 	json.Unmarshal(w.Body.Bytes(), &response)
 	assert.Equal(t, uint(1), response.ID)
@@ -150,7 +151,7 @@ func TestHandler_List(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response []models.Motorcycle
 	json.Unmarshal(w.Body.Bytes(), &response)
 	assert.Len(t, response, 2)
@@ -236,3 +237,34 @@ func TestHandler_Update(t *testing.T) {
 	}
 }
 
+type benchRepository struct{}
+
+func (s *benchRepository) CreateMotorcycle(*models.Motorcycle) error { return nil }
+func (s *benchRepository) GetAllMotorcycle() ([]models.Motorcycle, error) {
+	return nil, nil
+}
+func (s *benchRepository) UpdateMotorcycle(uint, *models.Motorcycle) error { return nil }
+
+func BenchmarkHandlerUpdate(b *testing.B) {
+	gin.SetMode(gin.TestMode)
+
+	h := &Handler{
+		service: NewService(&benchRepository{}),
+	}
+
+	for n := 0; n < b.N; n++ {
+		body := bytes.NewBuffer([]byte(`{"brand":"Honda","model":"CBR"}`))
+		req := httptest.NewRequest("PUT", "/motorcycles/1", body)
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+
+		c, _ := gin.CreateTestContext(w)
+		c.Request = req
+		c.Params = gin.Params{
+			{Key: "id", Value: strconv.Itoa(1)},
+		}
+
+		h.Update(c)
+	}
+}
