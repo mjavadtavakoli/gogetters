@@ -3,7 +3,7 @@ package book
 import (
     "gogetters/internal/models"
     "net/http"
-
+    "strconv"
     "github.com/gin-gonic/gin"
 )
 
@@ -36,3 +36,26 @@ func (h *Handler) List(c *gin.Context) {
     c.JSON(http.StatusOK, books)
 }
 
+
+func (h *Handler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var book models.Book
+	
+	if err := c.ShouldBindJSON(&book); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	idUint, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if err := h.service.UpdateBook(uint(idUint), &book); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, book)
+}

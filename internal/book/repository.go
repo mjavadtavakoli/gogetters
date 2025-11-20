@@ -23,3 +23,7 @@ func (r *Repository) GetAll() ([]models.Book, error) {
     return books, err
 }
 
+
+func (r *Repository) UpdateBook(id uint, book *models.Book) error {
+	return r.DB.Model(&models.Book{}).Where("id = ?", id).Updates(book).Error
+}

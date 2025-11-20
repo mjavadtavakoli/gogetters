@@ -12,9 +12,15 @@ func NewService(r *Repository) *Service {
 
 func (s *Service) CreateBook(book *models.Book) error {
     return s.repo.Create(book)
+
+    
 }
 
 func (s *Service) ListBooks() ([]models.Book, error) {
     return s.repo.GetAll()
 }
 
+
+func (s *Service) UpdateBook(id uint, book *models.Book) error {
+	return s.repo.UpdateBook(id, book)
+}
