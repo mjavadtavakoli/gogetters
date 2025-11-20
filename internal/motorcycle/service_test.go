@@ -32,18 +32,23 @@ func (m *MockRepository) UpdateMotorcycle(id uint, motorcycle *models.Motorcycle
 	return args.Error(0)
 }
 
+func (m *MockRepository) DeleteMotorcycle(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
 func TestService_CreateMotorcycle(t *testing.T) {
 	tests := []struct {
-		name      string
+		name       string
 		motorcycle *models.Motorcycle
-		mockSetup func(*MockRepository)
-		wantErr   bool
+		mockSetup  func(*MockRepository)
+		wantErr    bool
 	}{
 		{
 			name: "successful creation",
 			motorcycle: &models.Motorcycle{
 				Brand:      "Yamaha",
-				Totalspeed: 180,
+				Totalspeed: 80,
 				Fueltype:   "Gasoline",
 				Price:      15000.00,
 			},
@@ -56,7 +61,7 @@ func TestService_CreateMotorcycle(t *testing.T) {
 			name: "repository error",
 			motorcycle: &models.Motorcycle{
 				Brand:      "Yamaha",
-				Totalspeed: 180,
+				Totalspeed: 80,
 				Fueltype:   "Gasoline",
 				Price:      15000.00,
 			},
@@ -87,22 +92,22 @@ func TestService_CreateMotorcycle(t *testing.T) {
 
 func TestService_GetAllMotorcycle(t *testing.T) {
 	tests := []struct {
-		name           string
-		mockSetup      func(*MockRepository)
-		expectedCount  int
-		wantErr        bool
+		name          string
+		mockSetup     func(*MockRepository)
+		expectedCount int
+		wantErr       bool
 	}{
 		{
 			name: "successful retrieval",
 			mockSetup: func(mr *MockRepository) {
 				motorcycles := []models.Motorcycle{
-					{ID: 1, Brand: "Yamaha", Totalspeed: 180, Fueltype: "Gasoline", Price: 15000.00},
-					{ID: 2, Brand: "Honda", Totalspeed: 200, Fueltype: "Gasoline", Price: 18000.00},
+					{ID: 1, Brand: "Yamaha", Totalspeed: 80, Fueltype: "Gasoline", Price: 15000.00},
+					{ID: 2, Brand: "Honda", Totalspeed: 90, Fueltype: "Gasoline", Price: 18000.00},
 				}
 				mr.On("GetAllMotorcycle").Return(motorcycles, nil)
 			},
 			expectedCount: 2,
-			wantErr:      false,
+			wantErr:       false,
 		},
 		{
 			name: "empty list",
@@ -110,7 +115,7 @@ func TestService_GetAllMotorcycle(t *testing.T) {
 				mr.On("GetAllMotorcycle").Return([]models.Motorcycle{}, nil)
 			},
 			expectedCount: 0,
-			wantErr:      false,
+			wantErr:       false,
 		},
 		{
 			name: "repository error",
@@ -118,7 +123,7 @@ func TestService_GetAllMotorcycle(t *testing.T) {
 				mr.On("GetAllMotorcycle").Return(nil, errors.New("database error"))
 			},
 			expectedCount: 0,
-			wantErr:      true,
+			wantErr:       true,
 		},
 	}
 
@@ -143,18 +148,18 @@ func TestService_GetAllMotorcycle(t *testing.T) {
 
 func TestService_UpdateMotorcycle(t *testing.T) {
 	tests := []struct {
-		name        string
-		id          uint
-		motorcycle  *models.Motorcycle
-		mockSetup   func(*MockRepository)
-		wantErr     bool
+		name       string
+		id         uint
+		motorcycle *models.Motorcycle
+		mockSetup  func(*MockRepository)
+		wantErr    bool
 	}{
 		{
 			name: "successful update",
 			id:   1,
 			motorcycle: &models.Motorcycle{
 				Brand:      "Yamaha R1",
-				Totalspeed: 200,
+				Totalspeed: 90,
 				Fueltype:   "Gasoline",
 				Price:      20000.00,
 			},
@@ -168,7 +173,7 @@ func TestService_UpdateMotorcycle(t *testing.T) {
 			id:   1,
 			motorcycle: &models.Motorcycle{
 				Brand:      "Yamaha R1",
-				Totalspeed: 200,
+				Totalspeed: 90,
 				Fueltype:   "Gasoline",
 				Price:      20000.00,
 			},
@@ -182,7 +187,7 @@ func TestService_UpdateMotorcycle(t *testing.T) {
 			id:   999,
 			motorcycle: &models.Motorcycle{
 				Brand:      "Yamaha R1",
-				Totalspeed: 200,
+				Totalspeed: 90,
 				Fueltype:   "Gasoline",
 				Price:      20000.00,
 			},
@@ -211,3 +216,51 @@ func TestService_UpdateMotorcycle(t *testing.T) {
 	}
 }
 
+func TestService_DeleteMotorcycle(t *testing.T) {
+	tests := []struct {
+		name      string
+		id        uint
+		mockSetup func(*MockRepository)
+		wantErr   bool
+	}{
+		{
+			name: "successful delete",
+			id:   1,
+			mockSetup: func(mr *MockRepository) {
+				mr.On("DeleteMotorcycle", uint(1)).Return(nil)
+			},
+			wantErr: false,
+		},
+		{
+			name:      "invalid id",
+			id:        0,
+			mockSetup: func(mr *MockRepository) {},
+			wantErr:   true,
+		},
+		{
+			name: "repository error",
+			id:   2,
+			mockSetup: func(mr *MockRepository) {
+				mr.On("DeleteMotorcycle", uint(2)).Return(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(MockRepository)
+			tt.mockSetup(mockRepo)
+
+			service := NewService(mockRepo)
+			err := service.DeleteMotorcycle(tt.id)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}

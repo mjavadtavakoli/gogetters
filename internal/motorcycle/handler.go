@@ -35,13 +35,13 @@ func (h *Handler) Create(c *gin.Context) {
 func (h *Handler) List(c *gin.Context) {
 	motorcycles, _ := h.service.GetAllMotorcycle()
 
-	c.JSON(http.StatusOK, motorcycles)	
+	c.JSON(http.StatusOK, motorcycles)
 }
 
 func (h *Handler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var motorcycle models.Motorcycle
-	
+
 	if err := c.ShouldBindJSON(&motorcycle); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -59,4 +59,20 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, motorcycle)
+}
+
+func (h *Handler) Delete(c *gin.Context) {
+	id := c.Param("id")
+	idUint, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if err := h.service.DeleteMotorcycle(uint(idUint)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

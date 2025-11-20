@@ -27,7 +27,7 @@ func TestHandler_Create(t *testing.T) {
 			name: "successful creation",
 			requestBody: models.Motorcycle{
 				Brand:      "Yamaha",
-				Totalspeed: 180,
+				Totalspeed: 80,
 				Fueltype:   "Gasoline",
 				Price:      15000.00,
 			},
@@ -49,7 +49,7 @@ func TestHandler_Create(t *testing.T) {
 			name: "service error",
 			requestBody: models.Motorcycle{
 				Brand:      "Yamaha",
-				Totalspeed: 180,
+				Totalspeed: 80,
 				Fueltype:   "Gasoline",
 				Price:      15000.00,
 			},
@@ -108,7 +108,7 @@ func TestHandler_Create_Integration(t *testing.T) {
 
 	motorcycle := models.Motorcycle{
 		Brand:      "Yamaha",
-		Totalspeed: 180,
+		Totalspeed: 80,
 		Fueltype:   "Gasoline",
 		Price:      15000.00,
 	}
@@ -134,8 +134,8 @@ func TestHandler_List(t *testing.T) {
 
 	mockRepo := new(MockRepository)
 	expectedMotorcycles := []models.Motorcycle{
-		{ID: 1, Brand: "Yamaha", Totalspeed: 180, Fueltype: "Gasoline", Price: 15000.00},
-		{ID: 2, Brand: "Honda", Totalspeed: 200, Fueltype: "Gasoline", Price: 18000.00},
+		{ID: 1, Brand: "Yamaha", Totalspeed: 80, Fueltype: "Gasoline", Price: 15000.00},
+		{ID: 2, Brand: "Honda", Totalspeed: 90, Fueltype: "Gasoline", Price: 18000.00},
 	}
 	mockRepo.On("GetAllMotorcycle").Return(expectedMotorcycles, nil)
 
@@ -174,7 +174,7 @@ func TestHandler_Update(t *testing.T) {
 			id:   "1",
 			requestBody: models.Motorcycle{
 				Brand:      "Yamaha R1",
-				Totalspeed: 200,
+				Totalspeed: 90,
 				Fueltype:   "Gasoline",
 				Price:      20000.00,
 			},
@@ -202,7 +202,7 @@ func TestHandler_Update(t *testing.T) {
 			id:   "1",
 			requestBody: models.Motorcycle{
 				Brand:      "Yamaha R1",
-				Totalspeed: 200,
+				Totalspeed: 90,
 				Fueltype:   "Gasoline",
 				Price:      20000.00,
 			},
@@ -237,6 +237,61 @@ func TestHandler_Update(t *testing.T) {
 	}
 }
 
+func TestHandler_Delete(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	tests := []struct {
+		name           string
+		id             string
+		mockSetup      func(*MockRepository)
+		expectedStatus int
+	}{
+		{
+			name: "successful delete",
+			id:   "1",
+			mockSetup: func(mr *MockRepository) {
+				mr.On("DeleteMotorcycle", uint(1)).Return(nil)
+			},
+			expectedStatus: http.StatusNoContent,
+		},
+		{
+			name:           "invalid id",
+			id:             "abc",
+			mockSetup:      func(mr *MockRepository) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "service error",
+			id:   "1",
+			mockSetup: func(mr *MockRepository) {
+				mr.On("DeleteMotorcycle", uint(1)).Return(assert.AnError)
+			},
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockRepo := new(MockRepository)
+			tt.mockSetup(mockRepo)
+
+			service := NewService(mockRepo)
+			handler := NewHandler(service)
+
+			router := gin.New()
+			router.DELETE("/motorcycles/:id", handler.Delete)
+
+			req, _ := http.NewRequest("DELETE", "/motorcycles/"+tt.id, nil)
+			w := httptest.NewRecorder()
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
 type benchRepository struct{}
 
 func (s *benchRepository) CreateMotorcycle(*models.Motorcycle) error { return nil }
@@ -244,6 +299,7 @@ func (s *benchRepository) GetAllMotorcycle() ([]models.Motorcycle, error) {
 	return nil, nil
 }
 func (s *benchRepository) UpdateMotorcycle(uint, *models.Motorcycle) error { return nil }
+func (s *benchRepository) DeleteMotorcycle(uint) error                     { return nil }
 
 func BenchmarkHandlerUpdate(b *testing.B) {
 	gin.SetMode(gin.TestMode)
@@ -268,4 +324,3 @@ func BenchmarkHandlerUpdate(b *testing.B) {
 		h.Update(c)
 	}
 }
-

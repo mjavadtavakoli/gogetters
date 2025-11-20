@@ -37,7 +37,7 @@ func TestRepository_CreateMotorcycle(t *testing.T) {
 			name: "successful creation",
 			motorcycle: &models.Motorcycle{
 				Brand:      "Yamaha",
-				Totalspeed: 180,
+				Totalspeed: 80,
 				Fueltype:   "Gasoline",
 				Price:      15000.00,
 			},
@@ -47,7 +47,7 @@ func TestRepository_CreateMotorcycle(t *testing.T) {
 			name: "create another motorcycle",
 			motorcycle: &models.Motorcycle{
 				Brand:      "Honda",
-				Totalspeed: 200,
+				Totalspeed: 90,
 				Fueltype:   "Gasoline",
 				Price:      18000.00,
 			},
@@ -74,9 +74,9 @@ func TestRepository_GetAllMotorcycle(t *testing.T) {
 
 	// Create test data
 	motorcycles := []models.Motorcycle{
-		{Brand: "Yamaha", Totalspeed: 180, Fueltype: "Gasoline", Price: 15000.00},
-		{Brand: "Honda", Totalspeed: 200, Fueltype: "Gasoline", Price: 18000.00},
-		{Brand: "Kawasaki", Totalspeed: 190, Fueltype: "Gasoline", Price: 17000.00},
+		{Brand: "Yamaha", Totalspeed: 80, Fueltype: "Gasoline", Price: 15000.00},
+		{Brand: "Honda", Totalspeed: 90, Fueltype: "Gasoline", Price: 18000.00},
+		{Brand: "Kawasaki", Totalspeed: 85, Fueltype: "Gasoline", Price: 17000.00},
 	}
 
 	for i := range motorcycles {
@@ -109,7 +109,7 @@ func TestRepository_UpdateMotorcycle(t *testing.T) {
 	// Create a test motorcycle
 	motorcycle := &models.Motorcycle{
 		Brand:      "Yamaha",
-		Totalspeed: 180,
+		Totalspeed: 80,
 		Fueltype:   "Gasoline",
 		Price:      15000.00,
 	}
@@ -128,7 +128,7 @@ func TestRepository_UpdateMotorcycle(t *testing.T) {
 			id:   originalID,
 			updateData: &models.Motorcycle{
 				Brand:      "Yamaha R1",
-				Totalspeed: 200,
+				Totalspeed: 90,
 				Fueltype:   "Gasoline",
 				Price:      20000.00,
 			},
@@ -139,7 +139,7 @@ func TestRepository_UpdateMotorcycle(t *testing.T) {
 			id:   999,
 			updateData: &models.Motorcycle{
 				Brand:      "Yamaha R1",
-				Totalspeed: 200,
+				Totalspeed: 90,
 				Fueltype:   "Gasoline",
 				Price:      20000.00,
 			},
@@ -183,7 +183,7 @@ func TestRepository_Integration(t *testing.T) {
 	// Create
 	motorcycle := &models.Motorcycle{
 		Brand:      "Yamaha",
-		Totalspeed: 180,
+		Totalspeed: 80,
 		Fueltype:   "Gasoline",
 		Price:      15000.00,
 	}
@@ -200,7 +200,7 @@ func TestRepository_Integration(t *testing.T) {
 	// Update
 	updateData := &models.Motorcycle{
 		Brand:      "Yamaha R1",
-		Totalspeed: 200,
+		Totalspeed: 90,
 		Fueltype:   "Gasoline",
 		Price:      20000.00,
 	}
@@ -212,7 +212,6 @@ func TestRepository_Integration(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, all, 1)
 	assert.Equal(t, "Yamaha R1", all[0].Brand)
-	assert.Equal(t, 200, all[0].Totalspeed)
+	assert.Equal(t, 90, all[0].Totalspeed)
 	assert.Equal(t, 20000.00, all[0].Price)
 }
-
