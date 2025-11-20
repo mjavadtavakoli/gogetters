@@ -77,6 +77,7 @@ func main() {
 	r.POST("/coffees", coffeeHandler.Create)
 	r.GET("/coffees", coffeeHandler.List)
 	r.PUT("/coffees/:id", coffeeHandler.Update)
+	r.DELETE("/coffees/:id", coffeeHandler.Delete)
 
 	// Motorcycle Routes
 	r.POST("/motorcycles", motorcycleHandler.Create)
@@ -88,6 +89,7 @@ func main() {
 	r.POST("/laptops", laptopHandler.Create)
 	r.GET("/laptops", laptopHandler.List)
 	r.PUT("/laptops/:id", laptopHandler.Update)
+	r.DELETE("/laptops/:id", laptopHandler.Delete)
 
 	// Create HTTP server with graceful shutdown
 	srv := &http.Server{

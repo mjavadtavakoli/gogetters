@@ -43,6 +43,11 @@ func (s *Service) CreateMotorcycle(motorcycle *models.Motorcycle) error {
 		return errors.New("motorcycle price cannot be empty")
 	}
 
+	exists, _ := s.repo.FindByBrand(motorcycle.Brand)
+	if exists != nil {
+		return errors.New("a brand with this name already exists")
+	}
+
 	return s.repo.CreateMotorcycle(motorcycle)
 }
 
@@ -80,6 +85,11 @@ func (s *Service) UpdateMotorcycle(id uint, motorcycle *models.Motorcycle) error
 
 	if motorcycle.Price == 0 {
 		return errors.New("motorcycle price cannot be empty")
+	}
+
+	exists, _ := s.repo.FindByBrand(motorcycle.Brand)
+	if exists != nil {
+		return errors.New("a brand with this name already exists")
 	}
 
 	return s.repo.UpdateMotorcycle(id, motorcycle)

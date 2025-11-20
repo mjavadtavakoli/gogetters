@@ -32,6 +32,7 @@ func TestHandler_Create(t *testing.T) {
 				Price:      15000.00,
 			},
 			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha").Return(nil, nil)
 				mr.On("CreateMotorcycle", mock.AnythingOfType("*models.Motorcycle")).Return(nil).Run(func(args mock.Arguments) {
 					m := args.Get(0).(*models.Motorcycle)
 					m.ID = 1
@@ -54,9 +55,24 @@ func TestHandler_Create(t *testing.T) {
 				Price:      15000.00,
 			},
 			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha").Return(nil, nil)
 				mr.On("CreateMotorcycle", mock.AnythingOfType("*models.Motorcycle")).Return(assert.AnError)
 			},
 			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name: "duplicate key error returns 400",
+			requestBody: models.Motorcycle{
+				Brand:      "Yamaha",
+				Totalspeed: 80,
+				Fueltype:   "Gasoline",
+				Price:      15000.00,
+			},
+			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha").Return(nil, nil)
+				mr.On("CreateMotorcycle", mock.AnythingOfType("*models.Motorcycle")).Return(ErrDuplicateKey)
+			},
+			expectedStatus: http.StatusBadRequest,
 		},
 	}
 
@@ -95,6 +111,7 @@ func TestHandler_Create_Integration(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mockRepo := new(MockRepository)
+	mockRepo.On("FindByBrand", "Yamaha").Return(nil, nil)
 	mockRepo.On("CreateMotorcycle", mock.AnythingOfType("*models.Motorcycle")).Return(nil).Run(func(args mock.Arguments) {
 		m := args.Get(0).(*models.Motorcycle)
 		m.ID = 1
@@ -179,6 +196,7 @@ func TestHandler_Update(t *testing.T) {
 				Price:      20000.00,
 			},
 			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha R1").Return(nil, nil)
 				mr.On("UpdateMotorcycle", uint(1), mock.AnythingOfType("*models.Motorcycle")).Return(nil)
 			},
 			expectedStatus: http.StatusOK,
@@ -207,9 +225,25 @@ func TestHandler_Update(t *testing.T) {
 				Price:      20000.00,
 			},
 			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha R1").Return(nil, nil)
 				mr.On("UpdateMotorcycle", uint(1), mock.AnythingOfType("*models.Motorcycle")).Return(assert.AnError)
 			},
 			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name: "duplicate key error returns 400",
+			id:   "1",
+			requestBody: models.Motorcycle{
+				Brand:      "Yamaha R1",
+				Totalspeed: 90,
+				Fueltype:   "Gasoline",
+				Price:      20000.00,
+			},
+			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha R1").Return(nil, nil)
+				mr.On("UpdateMotorcycle", uint(1), mock.AnythingOfType("*models.Motorcycle")).Return(ErrDuplicateKey)
+			},
+			expectedStatus: http.StatusBadRequest,
 		},
 	}
 
@@ -300,6 +334,7 @@ func (s *benchRepository) GetAllMotorcycle() ([]models.Motorcycle, error) {
 }
 func (s *benchRepository) UpdateMotorcycle(uint, *models.Motorcycle) error { return nil }
 func (s *benchRepository) DeleteMotorcycle(uint) error                     { return nil }
+func (s *benchRepository) FindByBrand(string) (*models.Motorcycle, error)  { return nil, nil }
 
 func BenchmarkHandlerUpdate(b *testing.B) {
 	gin.SetMode(gin.TestMode)

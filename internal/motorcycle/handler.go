@@ -1,6 +1,7 @@
 package motorcycle
 
 import (
+	"errors"
 	"gogetters/internal/models"
 	"net/http"
 	"strconv"
@@ -25,6 +26,11 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	if err := h.service.CreateMotorcycle(&motorcycle); err != nil {
+		// Check if error is a duplicate key violation
+		if errors.Is(err, ErrDuplicateKey) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "a motorcycle with this ID already exists"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -54,6 +60,11 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	if err := h.service.UpdateMotorcycle(uint(idUint), &motorcycle); err != nil {
+		// Check if error is a duplicate key violation
+		if errors.Is(err, ErrDuplicateKey) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "a motorcycle with this ID already exists"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

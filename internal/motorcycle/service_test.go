@@ -37,6 +37,14 @@ func (m *MockRepository) DeleteMotorcycle(id uint) error {
 	return args.Error(0)
 }
 
+func (m *MockRepository) FindByBrand(brand string) (*models.Motorcycle, error) {
+	args := m.Called(brand)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Motorcycle), args.Error(1)
+}
+
 func TestService_CreateMotorcycle(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -53,6 +61,7 @@ func TestService_CreateMotorcycle(t *testing.T) {
 				Price:      15000.00,
 			},
 			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha").Return(nil, nil)
 				mr.On("CreateMotorcycle", mock.AnythingOfType("*models.Motorcycle")).Return(nil)
 			},
 			wantErr: false,
@@ -66,7 +75,22 @@ func TestService_CreateMotorcycle(t *testing.T) {
 				Price:      15000.00,
 			},
 			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha").Return(nil, nil)
 				mr.On("CreateMotorcycle", mock.AnythingOfType("*models.Motorcycle")).Return(errors.New("database error"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "duplicate brand",
+			motorcycle: &models.Motorcycle{
+				Brand:      "Yamaha",
+				Totalspeed: 80,
+				Fueltype:   "Gasoline",
+				Price:      15000.00,
+			},
+			mockSetup: func(mr *MockRepository) {
+				existingMotorcycle := &models.Motorcycle{ID: 1, Brand: "Yamaha"}
+				mr.On("FindByBrand", "Yamaha").Return(existingMotorcycle, nil)
 			},
 			wantErr: true,
 		},
@@ -164,6 +188,7 @@ func TestService_UpdateMotorcycle(t *testing.T) {
 				Price:      20000.00,
 			},
 			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha R1").Return(nil, nil)
 				mr.On("UpdateMotorcycle", uint(1), mock.AnythingOfType("*models.Motorcycle")).Return(nil)
 			},
 			wantErr: false,
@@ -178,6 +203,7 @@ func TestService_UpdateMotorcycle(t *testing.T) {
 				Price:      20000.00,
 			},
 			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha R1").Return(nil, nil)
 				mr.On("UpdateMotorcycle", uint(1), mock.AnythingOfType("*models.Motorcycle")).Return(errors.New("database error"))
 			},
 			wantErr: true,
@@ -192,6 +218,7 @@ func TestService_UpdateMotorcycle(t *testing.T) {
 				Price:      20000.00,
 			},
 			mockSetup: func(mr *MockRepository) {
+				mr.On("FindByBrand", "Yamaha R1").Return(nil, nil)
 				mr.On("UpdateMotorcycle", uint(999), mock.AnythingOfType("*models.Motorcycle")).Return(errors.New("record not found"))
 			},
 			wantErr: true,

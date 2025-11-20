@@ -26,3 +26,9 @@ func (r *Repository) GetAllCoffee() ([]models.Coffee, error) {
 func (r *Repository) UpdateCoffee(id uint, coffee *models.Coffee) error {
 	return r.DB.Model(&models.Coffee{}).Where("id = ?", id).Updates(coffee).Error
 }
+
+
+
+func (r *Repository) DeleteCoffe(id uint) error {
+	return r.DB.Delete(&models.Coffee{}, id).Error
+}

@@ -26,3 +26,8 @@ func (r *Repository) GetAllLaptop() ([]models.Laptop, error) {
 func (r *Repository) UpdateLaptop(id uint, laptop *models.Laptop) error {
 	return r.DB.Model(&models.Laptop{}).Where("id = ?", id).Updates(laptop).Error
 }
+
+
+func (r *Repository) DeleteLaptop(id uint) error {
+	return r.DB.Delete(&models.Laptop{}, id).Error
+}
