@@ -56,9 +56,7 @@ func (s *Service) GetAllMotorcycle() ([]models.Motorcycle, error) {
 }
 
 func (s *Service) UpdateMotorcycle(id uint, motorcycle *models.Motorcycle) error {
-	if motorcycle.Price < 100 {
-		return errors.New("motorcycle price must be at least 10000")
-	}
+	
 	if motorcycle.Price < 10000 {
 		return errors.New("motorcycle price must be at least 10000")
 	}
@@ -87,9 +85,13 @@ func (s *Service) UpdateMotorcycle(id uint, motorcycle *models.Motorcycle) error
 		return errors.New("motorcycle price cannot be empty")
 	}
 
-	exists, _ := s.repo.FindByBrand(motorcycle.Brand)
-	if exists != nil {
+	existsBrand, _ := s.repo.FindByBrand(motorcycle.Brand)
+	if existsBrand != nil {
 		return errors.New("a brand with this name already exists")
+	}
+	existsFuel, _ := s.repo.FindByFueltype(motorcycle.Fueltype)
+	if existsFuel != nil {
+		return errors.New("a fueltype with this name already exists")
 	}
 
 	return s.repo.UpdateMotorcycle(id, motorcycle)

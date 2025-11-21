@@ -40,6 +40,11 @@ func (s *Service) UpdateLaptop(id uint, laptop *models.Laptop) error {
 	if len(laptop.Cpu) < 2 {
 		return errors.New("cannot cpu name must be at least 2 characters")
 	}
+
+	exists, _ := s.repo.FindByCpu(laptop.Cpu)
+	if exists != nil {
+		return errors.New("a cpu with this name already exists")
+	}
 	return s.repo.UpdateLaptop(id, laptop)
 }
 

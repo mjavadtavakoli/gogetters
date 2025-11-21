@@ -18,6 +18,7 @@ type RepositoryInterface interface {
 	UpdateMotorcycle(id uint, motorcycle *models.Motorcycle) error
 	DeleteMotorcycle(id uint) error
 	FindByBrand(brand string) (*models.Motorcycle, error)
+	FindByFueltype(fueltype string) (*models.Motorcycle, error)
 }
 
 type Repository struct {
@@ -77,6 +78,18 @@ func (r *Repository) DeleteMotorcycle(id uint) error {
 func (r *Repository) FindByBrand(brand string) (*models.Motorcycle, error) {
 	var motorcycle models.Motorcycle
 	err := r.DB.Where("brand = ?", brand).First(&motorcycle).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &motorcycle, nil
+}
+
+func (r *Repository) FindByFueltype(fueltype string) (*models.Motorcycle, error) {
+	var motorcycle models.Motorcycle
+	err := r.DB.Where("fueltype = ?", fueltype).First(&motorcycle).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, nil
 	}

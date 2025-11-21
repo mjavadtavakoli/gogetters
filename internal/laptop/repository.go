@@ -31,3 +31,15 @@ func (r *Repository) UpdateLaptop(id uint, laptop *models.Laptop) error {
 func (r *Repository) DeleteLaptop(id uint) error {
 	return r.DB.Delete(&models.Laptop{}, id).Error
 }
+
+func (r *Repository) FindByCpu(cpu string) (*models.Laptop, error) {
+	var laptop models.Laptop
+	err := r.DB.Where("cpu = ?", cpu).First(&laptop).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &laptop, nil
+}
