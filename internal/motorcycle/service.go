@@ -103,3 +103,4 @@ func (s *Service) DeleteMotorcycle(id uint) error {
 	}
 	return s.repo.DeleteMotorcycle(id)
 }
+
