@@ -59,3 +59,21 @@ func (h *Handler) Update(c *gin.Context) {
 
 	c.JSON(http.StatusOK, book)
 }
+
+
+
+func (h *Handler) Delete(c *gin.Context) {
+	id := c.Param("id")
+	idUint, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if err := h.service.DeleteBook(uint(idUint)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

@@ -72,6 +72,7 @@ func main() {
 	r.POST("/books", bookHandler.Create)
 	r.GET("/books", bookHandler.List)
 	r.PUT("/books/:id", bookHandler.Update)
+	r.DELETE("/books/:id", bookHandler.Delete)
 
 	// Coffee Routes
 	r.POST("/coffees", coffeeHandler.Create)

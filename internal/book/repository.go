@@ -27,3 +27,8 @@ func (r *Repository) GetAll() ([]models.Book, error) {
 func (r *Repository) UpdateBook(id uint, book *models.Book) error {
 	return r.DB.Model(&models.Book{}).Where("id = ?", id).Updates(book).Error
 }
+
+
+func (r *Repository) DeleteBook(id uint) error {
+	return r.DB.Delete(&models.Book{}, id).Error
+}
