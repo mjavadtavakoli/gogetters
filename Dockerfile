@@ -22,4 +22,3 @@ COPY internal ./internal
 EXPOSE 8080
 
 CMD ["./server"]
-
