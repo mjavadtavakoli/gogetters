@@ -25,6 +25,7 @@ This project is designed as a practice environment for learning backend developm
 * **PostgreSQL Integration** using GORM
 * **Environment-based configuration**
 * **Graceful shutdown** support
+* **Concurrent inventory snapshot** endpoint that fans out work in goroutines
 * **Developer-friendly structure** for extension and scaling
 
 ---
@@ -100,6 +101,12 @@ POST /motorcycles
 ### 📄 Get All Motorcycles
 
 ```
+
+---
+
+## ⚡ Concurrent Summary Endpoint
+
+`GET /summary` returns the current counts for books, coffees, motorcycles, and laptops. The new `summary.Service` fans out counting work into goroutines so the overall latency is bounded by the slowest single query instead of the sum of all four database calls. This keeps the implementation simple (no background jobs) while still being safe for shared database access.
 GET /motorcycles
 ```
 

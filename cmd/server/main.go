@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/gin-gonic/gin"
 	"gogetters/internal/book"
 	"gogetters/internal/coffee"
 	"gogetters/internal/database"
 	"gogetters/internal/laptop"
 	"gogetters/internal/models"
 	"gogetters/internal/motorcycle"
+	"gogetters/internal/summary"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +17,8 @@ import (
 	"runtime/pprof"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
 	//"testing"
 )
 
@@ -39,7 +41,29 @@ func main() {
 		log.Printf("CPU profiling enabled, writing to %s", *cpuProfile)
 	}
 
-	dsn := "host=localhost user=postgres password=7878 dbname=gogetters port=5432 sslmode=disable"
+	// Get database connection details from environment variables with defaults
+	dbHost := os.Getenv("DB_HOST")
+	if dbHost == "" {
+		dbHost = "localhost" // default for local development
+	}
+	dbUser := os.Getenv("DB_USER")
+	if dbUser == "" {
+		dbUser = "postgres"
+	}
+	dbPassword := os.Getenv("DB_PASSWORD")
+	if dbPassword == "" {
+		dbPassword = "7878"
+	}
+	dbName := os.Getenv("DB_NAME")
+	if dbName == "" {
+		dbName = "gogetters"
+	}
+	dbPort := os.Getenv("DB_PORT")
+	if dbPort == "" {
+		dbPort = "5432"
+	}
+
+	dsn := "host=" + dbHost + " user=" + dbUser + " password=" + dbPassword + " dbname=" + dbName + " port=" + dbPort + " sslmode=disable"
 	db := database.Connect(dsn)
 
 	// Migrate Models
@@ -64,6 +88,10 @@ func main() {
 	laptopRepo := laptop.NewRepository(db)
 	laptopService := laptop.NewService(laptopRepo)
 	laptopHandler := laptop.NewHandler(laptopService)
+
+	// ---- SUMMARY SETUP ----
+	summaryService := summary.NewService(db)
+	summaryHandler := summary.NewHandler(summaryService)
 
 	// ---- ROUTER ----
 	r := gin.Default()
@@ -91,6 +119,9 @@ func main() {
 	r.GET("/laptops", laptopHandler.List)
 	r.PUT("/laptops/:id", laptopHandler.Update)
 	r.DELETE("/laptops/:id", laptopHandler.Delete)
+
+	// Summary Route (concurrent aggregates across resources)
+	r.GET("/summary", summaryHandler.Summary)
 
 	// Create HTTP server with graceful shutdown
 	srv := &http.Server{

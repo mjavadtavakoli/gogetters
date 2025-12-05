@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: gogetters-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 7878
+      POSTGRES_DB: gogetters
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: gogetters-app
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: 7878
+      DB_NAME: gogetters
+      DB_PORT: 5432
+    ports:
+      - "8080:8080"
+    command: ["./server"]
+
+volumes:
+  postgres_data:
+

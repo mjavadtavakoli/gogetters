@@ -24,7 +24,7 @@ func (h *Handler) Create(c *gin.Context) {
     }
 
     if err := h.service.CreateBook(&book); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
@@ -35,7 +35,6 @@ func (h *Handler) List(c *gin.Context) {
     books, _ := h.service.ListBooks()
     c.JSON(http.StatusOK, books)
 }
-
 
 func (h *Handler) Update(c *gin.Context) {
 	id := c.Param("id")
